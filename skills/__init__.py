@@ -12,10 +12,10 @@ class Skill:
 	def __init__(self, bot):
 		self.name = self.__class__.__name__
 		self.bot = bot
-		self.inputs = bot.get_inputs_by_skill(self.name)
-		self.outputs = bot.get_outputs_by_skill(self.name)
+		self.io = bot.io_manager.get_io_by_skill(self.name)
+		#self.outputs = bot.get_outputs_by_skill(self.name)
 		
-		logger.info( "Initializing Skill %s with Inputs=%s and Outputs=%s" % (self.name, self.inputs, self.outputs) )
+		logger.info( "Initializing Skill %s with IO=%s" % (self.name, self.io) )
 	
 	def get_regex(self):
 		flag = 0
@@ -28,3 +28,7 @@ class Skill:
 	def test(self, string):
 		'Returns true if the regex matches'
 		return self.get_regex().match(string) is not None
+
+	def run(self, string):
+		'Runs the algoritmh for a given string'
+		return "Not Implemented"

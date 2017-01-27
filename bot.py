@@ -72,14 +72,9 @@ class Bot:
 				self.shutdown()
 				return
 
-	def get_inputs_by_skill( self, skill_name ):
-		return self.io_manager.skills_io[ skill_name ]['inputs']
-
-	def get_outputs_by_skill( self, skill_name ):
-		return self.io_manager.skills_io[ skill_name ]['outputs']
-
 	def setup_skills(self):
 		from ambrosio import config
+
 		# Fetch skills from config
 		skills = config['skills']
 

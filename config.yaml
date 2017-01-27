@@ -1,9 +1,11 @@
 name: Ambrósio
 
 # Skills 
+# You can only configure each skill ONE time. 
+# If both input and output are lists, should be of the same size
 skills:
   - skill: HelloWorld
-    inputs:
+    io:
       - input: Terminal
         output: [ Terminal, Telegram ]
       - input: Telegram

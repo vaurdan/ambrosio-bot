@@ -79,8 +79,6 @@ class IOManager:
 		self.input_worker.start()
 		self.threads.append(self.input_worker)
 		# Start each InputFetcher workers
-		print self.inputs
-		print self.outputs
 		for input in self.inputs:
 			self.threads.append(input.start_fetcher())
 		for output in self.outputs:

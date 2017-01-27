@@ -5,7 +5,7 @@ from queue import Empty
 
 logger = logging.getLogger(__name__)
 
-class OutputHandler:
+class OutputDispatcher:
 
 	def __init__(self, io_manager):
 		self.name = self.__class__.__name__
@@ -20,32 +20,32 @@ class OutputHandler:
 
 	def start_handler(self):
 		logger.info("Starting %s Output Handler Worker." % self.name)
-		self.handler = OutputHandlerWorker(self)
+		self.handler = OutputDispatcherWorker(self)
 		self.handler.start()
 		return self.handler
 
-class OutputHandlerWorker(threading.Thread):
+class OutputDispatcherWorker(threading.Thread):
 	'Fetch and Distribute all the input'
 
-	def __init__(self, output_handler):
-		threading.Thread.__init__(self, name=output_handler.name + "OutputWorker" )
+	def __init__(self, output_dispatcher):
+		threading.Thread.__init__(self, name=output_dispatcher.name + "OutputWorker" )
 		# A flag to notify the thread that it should finish up and exit
 		self.kill_received = False
 
 		# Save the fetcher reference
-		self.output_handler = output_handler
-		self.io_manager = output_handler.io_manager
+		self.output_dispatcher = output_dispatcher
+		self.io_manager = output_dispatcher.io_manager
 
 	def run(self):
 		while not self.kill_received:
 			try:
 				# Get output from the Queue
-				logger.debug("Trying to get output from queue %s" % self.output_handler.name)
-				output = self.io_manager.get_output(self.output_handler.name)
+				logger.debug("Trying to get output from queue %s" % self.output_dispatcher.name)
+				output = self.io_manager.get_output(self.output_dispatcher.name)
 				# Handle the output
-				self.output_handler.handle( output )
+				self.output_dispatcher.handle( output )
 			except NotImplementedError:
 				logger.error( "%s has no Output handler implemented." % self.__class__.__name__)
 			except Empty:
-				logger.debug( "The queue for %s is empty" % self.output_handler.name)
+				logger.debug( "The queue for %s is empty" % self.output_dispatcher.name)
 

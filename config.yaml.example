@@ -2,22 +2,51 @@ name: Ambrósio
 
 # Skills 
 # You can only configure each skill ONE time. 
-# If both input and output are lists, should be of the same size
 skills:
   - skill: HelloWorld
     io:
-      - input: Terminal
-        output: [ Terminal, Telegram ]
-      - input: Telegram
-        output: Telegram
+      - input: terminal
+        output: terminal
+      - input: telegram
+        output: telegram
   - skill: GoodbyeWorld
     level: 1
-    input: Terminal
-    output: [ Terminal, Telegram ]
+    io:
+      - input: terminal
+        output: terminal
+      - input: telegram
+        output: telegram
   - skill: TalkOnTelegram
-    input: Terminal
-    output: Telegram 
+    input: terminal
+    output: telegram 
 
-# Inputs
+########
+# Register your inputs here
+########
 inputs:
-  - Terminal
+  # Default terminal input
+  - id: terminal
+    input_class: Terminal
+    args:
+      cursor: "$: "
+  - id: telegram
+    input_class: Telegram
+    args:
+      api_key: xxxxxxxxx
+
+########
+# Register your outputs here
+########
+outputs:
+  # Default terminal output
+  - id: terminal
+    output_class: Terminal
+    args:
+      target: stdout
+      cursor: "Ambrósio > "
+  # Ambrósio the bot output
+  - id: telegram
+    output_class: Telegram
+    args:
+      api_key: xxxxxx
+      default_chat: -102753965

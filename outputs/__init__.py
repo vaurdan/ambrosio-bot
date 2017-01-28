@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import logging
 import threading
 
@@ -9,7 +10,7 @@ class OutputDispatcher:
 
 	def __init__(self, id, io_manager, args=[]):
 		self.name = self.__class__.__name__
-		self.args = []
+		self.args = args
 		self.id = id
 
 		#logger.info( "Initializing %s" % self.name )
@@ -17,7 +18,7 @@ class OutputDispatcher:
 
 		logger.info( "Initialized %s (%s) Output" % (self.id, self.name) )
 
-	def handle(self, content):
+	def handle(self, message):
 		raise NotImplementedError("Not implemented")
 
 	def start_handler(self):
@@ -25,6 +26,14 @@ class OutputDispatcher:
 		self.handler = OutputDispatcherWorker(self)
 		self.handler.start()
 		return self.handler
+
+	def get_arg(self, key, default=None):
+		try:
+			return self.args[key]
+		except Exception:
+			if default is not None:
+				return default
+			raise Exception("Missing mandatory '%s' in %s config." % (key,self.id))
 
 class OutputDispatcherWorker(threading.Thread):
 	'Fetch and Distribute all the input'

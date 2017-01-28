@@ -24,6 +24,9 @@ class Skill:
 		if self.ignore_case:
 			flag |= re.IGNORECASE
 
+		flag |= re.LOCALE
+		flag |= re.UNICODE
+
 		return re.compile( self.regex, flag)
 
 	def test(self, string):

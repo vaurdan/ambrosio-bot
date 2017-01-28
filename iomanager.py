@@ -146,8 +146,10 @@ class IOManager:
 			try:
 				module = importlib.import_module('inputs.' + input_class.lower())
 				module_obj = getattr(module, input_class)
-
-				self.register_input( input_id, module_obj( id=input_id, io_manager=self, args=args) )
+				# Create the input fetcher object
+				input_module = module_obj( id=input_id, io_manager=self, args=args)
+				if input_module.is_valid:
+					self.register_input( input_id, input_module )
 			except ImportError:
 				logger.error( "Impossible to load Input %s: Module not found." % input_class )
 

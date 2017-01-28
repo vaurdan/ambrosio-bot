@@ -12,14 +12,16 @@ logger = logging.getLogger(__name__)
 class InputFetcher:
 	'Defines a InputFetcher that should go and fetch messages, and return InputMessages'
 
-	def __init__(self, io_manager):
+	def __init__(self, id, io_manager, args=[]):
 		self.name = self.__class__.__name__
 
 		#logger.info( "Initializing %s" % self.name )
 		self.io_manager = io_manager
 		self.input_queue = self.io_manager.input_queue
+		self.args = []
+		self.id = id
 
-		logger.info( "Initialized %s Input" % (self.name) )
+		logger.info( "Initialized %s (%s) Input" % (self.id, self.name) )
 
 	# Add input to the queue
 	def add_input_message(self, input):
@@ -69,8 +71,8 @@ class InputMessage:
 	def get_content(self):
 		return self.content
 
-	def get_input_name(self):
-		return self.input.name 
+	def get_input_id(self):
+		return self.input.id 
 
 class InputProcesserWorker(threading.Thread):
 	'Fetch and Distribute all the input to each registered Input object'
@@ -100,13 +102,13 @@ class InputProcesserWorker(threading.Thread):
 						ios = self.io_manager.get_io_by_skill(skill.name) # todo: optimizar para nao correr sempre
 						for io in ios:
 							# If is a list, loop thru the list of outputs
-							if isinstance(io['output'],list) and message.get_input_name() in io['input']:
+							if isinstance(io['output'],list) and message.get_input_id() in io['input']:
 								# Ok, got the correct input, loop the output and process it
 								for output in io['output']:
 									self.io_manager.add_output( output, output_content )
-							elif message.get_input_name() == io['input']:
+							elif message.get_input_id() == io['input']:
 								self.io_manager.add_output( io['output'], output_content )
-
+								
 					except KeyError as e:
 						logger.error("Couldn't send to %s output. Queue not found. Maybe the module doesn't exist?" % e.args[0])
 

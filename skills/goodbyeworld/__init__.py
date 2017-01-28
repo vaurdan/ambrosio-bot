@@ -2,6 +2,7 @@
 from skills import Skill
 
 class GoodbyeWorld(Skill):
+	
 	regex="^Adeus Ambrósio(!|\.+)*$"
 
 	def run(self, string):

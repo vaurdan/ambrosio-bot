@@ -8,9 +8,9 @@ logger = logging.getLogger(__name__)
 
 class Telegram(OutputDispatcher):
 
-	def __init__(self, io_manager):
+	def __init__(self, id, io_manager, args=[]):
 		from ambrosio import config 
-		OutputDispatcher.__init__(self,io_manager)
+		OutputDispatcher.__init__(self,id,io_manager,args)
 		logger.info("Initializing Telegram API")
 		self.bot = telegram.Bot( config['telegram_api'] )
 		self.chat_id = config['telegram_default_channel']

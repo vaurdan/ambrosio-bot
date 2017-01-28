@@ -18,9 +18,9 @@ class IOManager:
 	skills_io = {}
 
 	# List of Inputs
-	inputs = []
+	inputs = {}
 
-	outputs = []
+	outputs = {}
 
 	threads = []
 
@@ -50,14 +50,14 @@ class IOManager:
 	def get_output(self,output):
 		return self.output_queues[output].get(True, 3)
 
-	def register_input( self, input ):
-		logger.debug( "Registering %s Input", input.name)
-		self.inputs.append( input )
+	def register_input( self, id, input ):
+		logger.debug( "Registering %s Input (%s)" % ( id, input.name ) )
+		self.inputs[id] = input
 		return True
 
-	def register_output( self, input ):
-		logger.debug( "Registering %s Output", input.name)
-		self.outputs.append( input )
+	def register_output( self, id, output ):
+		logger.debug( "Registering %s Ouput (%s)" % ( id, output.name ) )
+		self.outputs[id] = output
 		return True
 
 	def get_io_by_skill( self, skill_name ):
@@ -79,9 +79,9 @@ class IOManager:
 		self.input_worker.start()
 		self.threads.append(self.input_worker)
 		# Start each InputFetcher workers
-		for input in self.inputs:
+		for input_id, input in self.inputs.iteritems():
 			self.threads.append(input.start_fetcher())
-		for output in self.outputs:
+		for output_id, output in self.outputs.iteritems():
 			self.threads.append(output.start_handler())
 
 
@@ -98,11 +98,7 @@ class IOManager:
 
 		# Fetch skills from config
 		skills = config['skills']
-		# Initialize the empty inputs list
-		inputs = []
-		outputs = []
 
-		logger.info( "Initializing Inputs" )
 		# Loop thru skills to find the available inputs
 		for skill in skills:
 			skill_name = skill['skill']
@@ -112,33 +108,25 @@ class IOManager:
 				for io_pair in skill['io']: 
 					# Check Inputs
 					if isinstance(io_pair['input'],list):
-						inputs.extend(io_pair['input'])
 						self.skills_io[ skill_name ]['inputs'].extend(io_pair['input'])
 					else:
-						inputs.append(io_pair['input'])
 						self.skills_io[ skill_name ]['inputs'].append(io_pair['input'])
 					# Check Outputs
 					if isinstance(io_pair['output'],list):
-						outputs.extend(io_pair['output'])
 						self.skills_io[ skill_name ]['outputs'].extend(io_pair['output'])
 					else:
-						outputs.append(io_pair['output'])
 						self.skills_io[ skill_name ]['inputs'].append(io_pair['output'])
 
 			else:
 				# Check Inputs
 				if isinstance(skill['input'],list):
-					inputs.extend(skill['input'])
 					self.skills_io[ skill_name ]['inputs'].extend(skill['input'])
 				else:
-					inputs.append(skill['input'])
 					self.skills_io[ skill_name ]['inputs'].append(skill['input'])
 				# Check Outputs
 				if isinstance(skill['output'],list):
-					outputs.extend(skill['output'])
 					self.skills_io[ skill_name ]['outputs'].extend(skill['output'])
 				else:
-					outputs.append(skill['output'])
 					self.skills_io[ skill_name ]['outputs'].append(skill['output'])
 
 			# Make the list unique
@@ -146,28 +134,38 @@ class IOManager:
 			self.skills_io[ skill_name ]['outputs'] = list_unique(self.skills_io[ skill_name ]['outputs'])
 
 		# Make inputs and outputs unique
-		inputs = list_unique(inputs)
-		outputs = list_unique(outputs)
+		inputs = config['inputs']
+		outputs = config['outputs']
 
 		# Load Inputs
+		logger.info( "Initializing Inputs" )
 		for input in inputs: 
+			input_id = input['id']
+			input_class = input['input_class']
+			args = input['args']
 			try:
-				module = importlib.import_module('inputs.' + input.lower())
-				module_obj = getattr(module, input)
+				module = importlib.import_module('inputs.' + input_class.lower())
+				module_obj = getattr(module, input_class)
 
-				self.register_input( module_obj(self) )
+				self.register_input( input_id, module_obj( id=input_id, io_manager=self, args=args) )
 			except ImportError:
-				logger.error( "Impossible to load Input %s: Module not found." % input )
+				logger.error( "Impossible to load Input %s: Module not found." % input_class )
 
+		logger.info( "Initializing Outputs" )
 		# Load outputs
 		for output in outputs:
+			output_id = output['id']
+			output_class = output['output_class']
+			args = output['args']
+
 			# Create the queue
-			self.output_queues[output] = Queue()
+			self.output_queues[output_id] = Queue()
+
 			# Load the outputs
 			try:
-				module = importlib.import_module('outputs.' + output.lower())
-				module_obj = getattr(module, output)
+				module = importlib.import_module('outputs.' + output_class.lower())
+				module_obj = getattr(module, output_class)
 
-				self.register_output( module_obj(self) )
+				self.register_output( output_id, module_obj( id=output_id, io_manager=self, args=args ) )
 			except ImportError:
 				logger.error( "Impossible to load Output %s: Module not found." % output )

@@ -7,13 +7,15 @@ logger = logging.getLogger(__name__)
 
 class OutputDispatcher:
 
-	def __init__(self, io_manager):
+	def __init__(self, id, io_manager, args=[]):
 		self.name = self.__class__.__name__
+		self.args = []
+		self.id = id
 
 		#logger.info( "Initializing %s" % self.name )
 		self.io_manager = io_manager
 
-		logger.info( "Initialized %s Input" % (self.name) )
+		logger.info( "Initialized %s (%s) Output" % (self.id, self.name) )
 
 	def handle(self, content):
 		raise NotImplementedError("Not implemented")
@@ -40,12 +42,12 @@ class OutputDispatcherWorker(threading.Thread):
 		while not self.kill_received:
 			try:
 				# Get output from the Queue
-				logger.debug("Trying to get output from queue %s" % self.output_dispatcher.name)
-				output = self.io_manager.get_output(self.output_dispatcher.name)
+				logger.debug("Trying to get output from queue %s" % self.output_dispatcher.id)
+				output = self.io_manager.get_output(self.output_dispatcher.id)
 				# Handle the output
 				self.output_dispatcher.handle( output )
 			except NotImplementedError:
 				logger.error( "%s has no Output handler implemented." % self.__class__.__name__)
 			except Empty:
-				logger.debug( "The queue for %s is empty" % self.output_dispatcher.name)
+				logger.debug( "The queue for %s is empty" % self.output_dispatcher.id)
 

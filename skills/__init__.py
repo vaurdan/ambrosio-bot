@@ -9,10 +9,11 @@ class Skill:
 
 	ignore_case = True
 
-	def __init__(self, bot):
+	def __init__(self, bot, args=[]):
 		self.name = self.__class__.__name__
 		self.bot = bot
 		self.io = bot.io_manager.get_io_by_skill(self.name)
+		self.args = []
 		#self.outputs = bot.get_outputs_by_skill(self.name)
 		
 		logger.info( "Initializing Skill %s with IO=%s" % (self.name, self.io) )

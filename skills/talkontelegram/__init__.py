@@ -4,5 +4,5 @@ from skills import Skill
 class TalkOnTelegram(Skill):
 	regex="^\/talk (.*)"
 
-	def run(self, string):
+	def run(self, message):
 		return string.replace('/talk ', '')

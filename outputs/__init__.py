@@ -18,7 +18,19 @@ class OutputDispatcher:
 
 		logger.info( "Initialized %s (%s) Output" % (self.id, self.name) )
 
-	def handle(self, message):
+	def handle(self, output_message):
+		if isinstance( output_message, TextMessage ):
+			self.handle_text(output_message)
+		elif isinstance( output_message, ImageMessage ):
+			self.handle_image(output_message)
+		else:
+			# By default, handle the OutputMessage as a text
+			self.handle_text(output_message)
+
+	def handle_text(self, message):
+		raise NotImplementedError("Not implemented")
+
+	def handle_image(self, message):
 		raise NotImplementedError("Not implemented")
 
 	def start_handler(self):
@@ -60,3 +72,29 @@ class OutputDispatcherWorker(threading.Thread):
 			except Empty:
 				logger.debug( "The queue for %s is empty" % self.output_dispatcher.id)
 
+## OUTPUT MESSAGES
+
+class OutputMessage:
+
+	content = ""
+
+	input_message = None
+
+	is_reply = True
+
+	def __init__(self, content, input_message, reply=True):
+		self.content = content
+		self.input_message = input_message
+		self.is_reply = reply
+
+	def get_input_id(self):
+		return self.input_message.get_input_id()
+
+	def get_content(self):
+		return self.content
+
+class TextMessage(OutputMessage):
+	pass
+
+class ImageMessage(OutputMessage):
+	pass

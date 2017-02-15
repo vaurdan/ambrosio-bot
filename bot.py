@@ -7,8 +7,13 @@ import logging
 from collections import defaultdict
 
 from iomanager import IOManager
+import database
+
+# Models
+from models.user import User
 
 logger = logging.getLogger(__name__)
+
 
 class Bot:
 	'Creates a new bot instance'
@@ -25,10 +30,14 @@ class Bot:
 
 	threads = []
 
+
 	def __init__(self, name):
 		self.name = name
 
 		logger.info( "%s is initializing. Running version %s" % (name, self.version) )
+
+		# Initialize the database
+		self.init_database()
 
 		# Create input manager
 		self.io_manager = IOManager(self)
@@ -38,7 +47,6 @@ class Bot:
 
 		# 2nd. Setup Skills
 		self.setup_skills()
-
 
 	def start(self):
 
@@ -71,6 +79,11 @@ class Bot:
 				logger.info( "Ctrl-c received! Shutting down..." )
 				self.shutdown()
 				return
+
+
+	def init_database(self):
+		database.database().connect()
+		database.database().create_tables([ User ], safe=True)
 
 	def setup_skills(self):
 		from ambrosio import config

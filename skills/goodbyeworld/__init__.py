@@ -5,5 +5,5 @@ class GoodbyeWorld(Skill):
 
 	regex="^Adeus Ambrósio(!|\.+)*$"
 
-	def run(self, string):
-		return "Adeus, até à proxima!"
+	def run(self, message):
+		self.send_message( "Adeus, %s!" % str(message.user().name), message )

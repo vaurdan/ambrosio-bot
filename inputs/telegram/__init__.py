@@ -52,10 +52,18 @@ class Telegram(InputFetcher):
 		else:
 			if updates:
 				for update in updates:
+					if not hasattr( update.message, 'text' ):
+						logger.info( "Received Telegram message without a text. Ignoring..." )
+						continue;
 					# Create the message object
 					message = InputMessage(self, update.message.text)
 					message.update = update
 					message.message = update.message
+					message.set_user_data({
+						'username': update.message.from_user.username,
+						'name': update.message.from_user.first_name + " " + update.message.from_user.last_name,
+						'id': update.message.from_user.id, # TODO: Pode haver conflito de ID's?
+					})
 					# Add it to the queue
 					logger.debug("Received Message on Telegram: %s" % update.message.text)
 					self.add_input_message(message)

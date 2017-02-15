@@ -7,6 +7,8 @@ import importlib
 from utils import list_unique
 from queue import Queue, Empty
 
+from models.user import User
+
 logger = logging.getLogger(__name__)
 
 
@@ -31,6 +33,16 @@ class InputFetcher:
 			return 
 
 		logger.info( "Initialized %s (%s) Input" % (self.id, self.name) )
+
+	def add_message( self, content, user_data ):
+		# Create the Input Message
+		message = InputMessage(self, content)
+		message.set_user_data( user_data )
+		# Store it in the queue
+		self.add_input_message(message)
+
+	def raw_user_data(self):
+		raise NotImplementedError("Not implemented")
 
 	def boot(self):
 		return True
@@ -77,18 +89,36 @@ class InputFetcherWorker(threading.Thread):
 				self.input_fetcher.fetch()
 			except NotImplementedError:
 				logger.error( "%s has no Fetcher implemented." % self.__class__.__name__)
-				return
+			except Exception as e:
+				logger.exception( "%s Fetcher Exception: %s" % ( self.__class__.__name__, e.args[0] ) )
 
 
 class InputMessage:
 	'Abstract class defining a InputMessage, that is processed by the InputWorker'
-	content = None
+	content = None 
 
 	processed_message = None
+
+	user_data = None
 
 	def __init__(self, input, content=""):
 		self.input = input
 		self.set_content(content)
+
+	def user( self ):
+		return self._user
+
+	def set_user_data( self, data ):
+		if 'username' not in data:
+			raise Exception('User data should have a username')
+
+		self.user_data = data
+
+	def get_user_data( self ):
+		if self.user_data is None:
+			raise Exception('Missing user data in the Message')
+		return self.user_data
+
 
 	def set_content(self,string):
 		# Normalize the string to UTF8
@@ -111,6 +141,26 @@ class InputMessage:
 	def set_output_message(self, string):
 		self.processed_message = string
 
+	def maybe_create_user(self):
+		user_data = self.get_user_data()
+		username = user_data['username']
+
+		# Set default name if name is not set
+		if 'name' not in user_data:
+			user_data['name'] = user_data['username']
+
+		# Setup the input in the userdata
+		user_data['input'] = self.get_input_id()
+
+		user_select = User.select().where(User.username == username)
+
+		# Try to get user by username
+		if not user_select.exists():
+			logger.info("User %s does not exist, creating..." % username)
+			self._user = User.create(**user_data)
+		else:
+			self._user = user_select.get()
+
 class InputProcesserWorker(threading.Thread):
 	'Fetch and Distribute all the input to each registered Input object'
 
@@ -124,30 +174,22 @@ class InputProcesserWorker(threading.Thread):
 
 	# Return an list of outputs
 	def process_message( self, message ):
+		# Try to create the user first
+		try: 
+			message.maybe_create_user()
 
-		# Get all the registered skills
-		skills = self.io_manager.bot.skills
-		# Loop thru the skills
-		for level, skill_group in sorted(skills.iteritems()):
-			for skill in skill_group:
-				if skill.test(message.get_content()):
-					logger.info( "Found a match on %s" % skill.name )
-					# Process the message
-					message.set_output_message( skill.run(message.get_content()) )
-					# Store the output in the correct queue
-					try:
-						# O add output tem que ser para todos os outputs
-						ios = self.io_manager.get_io_by_skill(skill.name) # todo: optimizar para nao correr sempre
-						for io in ios:
-							# If is a list, loop thru the list of outputs
-							if isinstance(io['output'],list) and message.get_input_id() in io['input']:
-								# Ok, got the correct input, loop the output and process it
-								for output in io['output']:
-									self.io_manager.add_output( output, message )
-							elif message.get_input_id() == io['input']:
-								self.io_manager.add_output( io['output'], message )
-					except KeyError as e:
-						logger.error("Couldn't send to %s output. Queue not found. Maybe the module doesn't exist?" % e.args[0])
+			# Get all the registered skills
+			skills = self.io_manager.bot.skills
+			# Loop thru the skills
+			for level, skill_group in sorted(skills.iteritems()):
+				for skill in skill_group:
+					if skill.test(message.get_content()):
+						logger.info( "Found a match on %s" % skill.name )
+						# Process the message
+						skill.run(message)
+						
+		except Exception as e:
+			logger.exception( "Error in the %s message processing: %s" % ( message.get_input_id(), e.args[0]) )
 
 
 	def run(self):

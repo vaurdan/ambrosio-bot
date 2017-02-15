@@ -21,13 +21,18 @@ class Telegram(OutputDispatcher):
 		self.default_chat = self.get_arg('default_chat')
 
 
-	def handle(self, message):
+	def handle_text(self, message):
 		# Check if the message came from telegram
-		if hasattr(message, 'update'):
-			telegram_message = message.message
-			telegram_message.reply_text( message.get_output_message() )
+		if hasattr(message.input_message, 'update'):
+			telegram_message = message.input_message.message
+
+			if message.is_reply:
+				telegram_message.reply_text( message.get_content() )
+			else:
+				chat_id = telegram_message.chat.id
+				self.telegram_bot.sendMessage( chat_id=chat_id, text=message.get_content() )
 			return
 		
-		self.telegram_bot.sendMessage( chat_id=self.default_chat, text=message.get_output_message() )
+		self.telegram_bot.sendMessage( chat_id=self.default_chat, text=message.get_content() )
 		
 

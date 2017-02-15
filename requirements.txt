@@ -1,2 +1,4 @@
 pyyaml
 python-telegram-bot
+peewee
+python-slugify

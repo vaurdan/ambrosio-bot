@@ -19,7 +19,12 @@ skills:
   - skill: TalkOnTelegram
     input: terminal
     output: telegram 
-
+  # Custom skill
+  - skill: Foo
+    custom: yes
+    input: terminal
+    output: terminal
+    
 ########
 # Register your inputs here
 ########
@@ -49,4 +54,4 @@ outputs:
     output_class: Telegram
     args:
       api_key: xxxxxx
-      default_chat: -102753965
+      default_chat: xxxxx

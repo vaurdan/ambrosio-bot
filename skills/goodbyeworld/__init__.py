@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from skills import Skill, Rule
+from skills import Skill
 
 class GoodbyeWorld(Skill):
 

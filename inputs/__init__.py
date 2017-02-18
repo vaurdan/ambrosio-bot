@@ -183,10 +183,9 @@ class InputProcesserWorker(threading.Thread):
 			# Loop thru the skills
 			for level, skill_group in sorted(skills.iteritems()):
 				for skill in skill_group:
-					if skill.test(message.get_content()):
+					# Try to run the message
+					if skill.run(message):
 						logger.info( "Found a match on %s" % skill.name )
-						# Process the message
-						skill.run(message)
 						
 		except Exception as e:
 			logger.exception( "Error in the %s message processing: %s" % ( message.get_input_id(), e.args[0]) )

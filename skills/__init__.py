@@ -7,8 +7,6 @@ logger = logging.getLogger(__name__)
 
 class Skill:
 
-	regex = ".*"
-
 	ignore_case = True
 
 	def __init__(self, bot, args={}):
@@ -17,11 +15,22 @@ class Skill:
 		self.io_manager = bot.io_manager
 		self.io = self.io_manager.get_io_by_skill(self.name)
 		self.args = {}
+		self.rules = {}
 		#self.outputs = bot.get_outputs_by_skill(self.name)
 		
 		logger.info( "Initializing Skill %s with IO=%s" % (self.name, self.io) )
-	
-	def get_regex(self):
+		self.setup_rules()
+
+	def setup_rules(self):
+		logger.warning("%s has no rules. Please implement the setup_rules method." % self.name)
+		return False
+
+	def add_rule( self, regex, callback ):
+		logger.info("[ %s ] Registering rule %s" % (self.name, regex) )
+		self.rules[ regex ] = callback
+		return True
+
+	def compile_regex(self, regex):
 		flag = 0
 
 		if self.ignore_case:
@@ -30,15 +39,25 @@ class Skill:
 		flag |= re.LOCALE
 		flag |= re.UNICODE
 
-		return re.compile( self.regex, flag)
+		return re.compile( regex, flag)
 
 	def test(self, string):
 		'Returns true if the regex matches'
-		return self.get_regex().match(string) is not None
+		for rule, callback in self.rules.iteritems():
+			regex = self.compile_regex( rule )
+			if regex.match(string) is not None:
+				return True
+		return False
 
 	def run(self, message):
 		'Runs the algoritmh for a given string'
-		return "Not Implemented"
+		content_string = message.get_content()
+		for rule, callback in self.rules.iteritems():
+			regex = self.compile_regex( rule )
+			if regex.match(content_string) is not None:
+				callback(message)
+				return True
+		return False
 
 	def add_output(self, output_message):
 		# Store the output in the correct queue
@@ -62,6 +81,9 @@ class Skill:
 		message = TextMessage( text_message, original_message, **args )
 		self.add_output(message)
 	
+	'''
+	Alias of Skill.send_message
+	'''
 	def send_text(self, text_message, original_message, reply=True,  args = {}):
 		self.send_message(text_message, original_message, reply, **args)
 
@@ -69,7 +91,6 @@ class Skill:
 
 		# setup the args
 		args['reply'] = reply
-		
+
 		message = ImageMessage( image_message, original_message, **args )
 		self.add_output(message)
-	

@@ -97,12 +97,18 @@ class Bot:
 			try:
 				level = skill['level'] if 'level' in skill else 0
 				name = skill['skill']
-				module = importlib.import_module('skills.' + name.lower())
+				is_custom = skill['custom'] if 'custom' in skill else False
+
+				if is_custom:
+					module = importlib.import_module('config.skills.' + name.lower())
+				else:
+					module = importlib.import_module('skills.' + name.lower())
+
 				module_obj = getattr(module, name)
 
 				self.register_skill( module_obj(self), level )
-			except ImportError:
-				logger.error( "Impossible to load skill %s: Module not found." % name )
+			except ImportError as e:
+				logger.error( "Impossible to load skill %s: Module not found (%s)" % (name, e.args[0] ) )
 
 	def register_skill( self, skill, level = 0 ):
 		logger.debug( "Registering Skill %s in level %s" % ( skill.name, level ) )

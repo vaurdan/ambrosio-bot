@@ -34,5 +34,19 @@ class Telegram(OutputDispatcher):
 			return
 		
 		self.telegram_bot.sendMessage( chat_id=self.default_chat, text=message.get_content() )
-		
 
+	def handle_image(self, message):
+		# Get the caption
+		caption = message.get_caption() if message.has_caption() else False
+
+		# Check if the message came from telegram
+		if hasattr(message.input_message, 'update'):
+			telegram_message = message.input_message.message
+
+			if message.is_reply:
+				telegram_message.reply_photo( message.get_content(), caption=caption )
+			else:
+				chat_id = telegram_message.chat.id
+				self.telegram_bot.send_photo( chat_id=chat_id, photo=message.get_content(), caption=caption )
+		else:
+			self.telegram_bot.send_photo( chat_id=self.default_chat, photo=message.get_content(), caption=caption )

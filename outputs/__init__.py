@@ -97,4 +97,13 @@ class TextMessage(OutputMessage):
 	pass
 
 class ImageMessage(OutputMessage):
-	pass
+	
+	def __init__(self, image_path, input_message, reply=True, caption=None):
+		OutputMessage.__init__(self, image_path, input_message, reply)
+		self.caption = caption
+
+	def has_caption(self):
+		return self.caption is not None
+
+	def get_caption(self):
+		return self.caption

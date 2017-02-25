@@ -1,5 +1,12 @@
 name: Ambrósio
 
+# MongoDB database settings
+database:
+  name: ambrosio
+  username: False
+  password: False
+  host: localhost
+  
 # Skills 
 # You can only configure each skill ONE time. 
 skills:

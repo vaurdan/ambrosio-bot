@@ -6,12 +6,14 @@ import pwd
 class Terminal(InputFetcher):
 	
 	def fetch(self):
+
 		# Fetch the value from terminal
 		value = raw_input('$: ')
 		# Add the message with user data
 
 		user_data = { 
 			'username': pwd.getpwuid( os.getuid() )[ 0 ],
+			'id': os.getuid()
 		}
 
 		self.add_message(value, user_data)		

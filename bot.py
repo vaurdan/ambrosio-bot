@@ -36,9 +36,6 @@ class Bot:
 
 		logger.info( "%s is initializing. Running version %s" % (name, self.version) )
 
-		# Initialize the database
-		self.init_database()
-
 		# Create input manager
 		self.io_manager = IOManager(self)
 
@@ -79,11 +76,6 @@ class Bot:
 				logger.info( "Ctrl-c received! Shutting down..." )
 				self.shutdown()
 				return
-
-
-	def init_database(self):
-		database.database().connect()
-		database.database().create_tables([ User ], safe=True)
 
 	def setup_skills(self):
 		from ambrosio import config

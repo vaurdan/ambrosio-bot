@@ -2,22 +2,16 @@
 # -*- coding: utf-8 -*-
 
 from bot import Bot
-import ConfigParser
-import yaml
 import logging
-import sys
+
+from config import config
 
 # Create config object
 '''config = ConfigParser.ConfigParser()
 config.optionxform = str
 config.read('config.ini')'''
 
-with open("config/config.yaml", 'r') as stream:
-    try:
-        config = yaml.load(stream)
-    except yaml.YAMLError as exc:
-        print(exc)
-        sys.exit(-1)
+
 
 # Enable logging
 logging.basicConfig(format='[%(asctime)s] [%(levelname)s] [ %(name)s ] - %(message)s',

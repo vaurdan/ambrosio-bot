@@ -5,6 +5,7 @@ import importlib
 
 from utils import list_unique
 from queue import Queue, Empty
+from skills import Skill
 
 from inputs import *
 
@@ -61,11 +62,14 @@ class IOManager:
 		return True
 
 	def get_io_by_skill( self, skill_name ):
-		from ambrosio import config
+		from config import config
+
+		if isinstance(skill_name, Skill):
+			skill_name = skill_name.name
 
 		skills = config['skills']
 		for skill in skills:
-			if(skill['skill'] == skill_name):
+			if(skill['skill'].lower() == skill_name.lower()):
 				# If it's already a properly formated dict, return it
 				if 'io' in skill:
 					return skill['io']

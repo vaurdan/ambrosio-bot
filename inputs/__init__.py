@@ -7,7 +7,7 @@ import importlib
 from utils import list_unique
 from queue import Queue, Empty
 
-from models.user import User
+import models.user as UserModel
 
 logger = logging.getLogger(__name__)
 
@@ -145,6 +145,8 @@ class InputMessage:
 		user_data = self.get_user_data()
 		username = user_data['username']
 
+		user_id = user_data['id']
+
 		# Set default name if name is not set
 		if 'name' not in user_data:
 			user_data['name'] = user_data['username']
@@ -152,14 +154,15 @@ class InputMessage:
 		# Setup the input in the userdata
 		user_data['input'] = self.get_input_id()
 
-		user_select = User.select().where(User.username == username)
+		user_select = UserModel.find_by_id( user_id )
 
 		# Try to get user by username
-		if not user_select.exists():
+		if user_select is None:
 			logger.info("User %s does not exist, creating..." % username)
-			self._user = User.create(**user_data)
+			self._user = UserModel.User(**user_data)
+			self._user.save()
 		else:
-			self._user = user_select.get()
+			self._user = user_select
 
 class InputProcesserWorker(threading.Thread):
 	'Fetch and Distribute all the input to each registered Input object'
@@ -183,9 +186,17 @@ class InputProcesserWorker(threading.Thread):
 			# Loop thru the skills
 			for level, skill_group in sorted(skills.iteritems()):
 				for skill in skill_group:
+					# Make sure it only runs on the skill input
+					should_run = False
+					ios = self.io_manager.get_io_by_skill(skill)
+					for io in ios:
+						if io['input'] == message.input.id:
+							should_run = True
+							break;
+
 					# Try to run the message
-					if skill.run(message):
-						logger.info( "Found a match on %s" % skill.name )
+					if should_run and skill.run(message):
+						logger.debug( "Found a match on %s" % skill.name )
 						
 		except Exception as e:
 			logger.exception( "Error in the %s message processing: %s" % ( message.get_input_id(), e.args[0]) )

@@ -1,16 +1,20 @@
-from peewee import *
+from mongoengine import *
 import datetime
 
 from database import database
 
-class User(Model):
+class User(Document):
 
-	id = PrimaryKeyField()
-	name = CharField()
-	username = CharField(unique=True)
-	input = CharField()
+	id = IntField(primary_key=True)
+	name = StringField(required=True)
+	username = StringField(unique_with=['id'])
+	input = StringField(required=True)
 	created_at = DateTimeField(default=datetime.datetime.now)
 
-	class Meta:
-		database = database()
+	user_data = DictField()
 
+	meta = {'allow_inheritance': True}
+
+
+def find_by_id( id ):
+	return User.objects(id=id).first()

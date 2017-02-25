@@ -1,4 +1,4 @@
 pyyaml
 python-telegram-bot
-peewee
+mongoengine
 python-slugify

@@ -3,9 +3,8 @@ import threading
 import time
 import importlib
 
-from utils import list_unique
-from queue import Queue, Empty
 from skills import Skill
+from utils import list_unique
 
 from inputs import *
 
@@ -69,7 +68,7 @@ class IOManager:
 
 		skills = config['skills']
 		for skill in skills:
-			if(skill['skill'].lower() == skill_name.lower()):
+			if skill['skill'].lower() == skill_name.lower():
 				# If it's already a properly formated dict, return it
 				if 'io' in skill:
 					return skill['io']

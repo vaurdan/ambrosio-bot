@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import threading
 import time
 import importlib
 import logging
 from collections import defaultdict
 
 from iomanager import IOManager
-import database
 
 # Models
 from models.user import User
@@ -16,7 +14,9 @@ logger = logging.getLogger(__name__)
 
 
 class Bot:
-	'Creates a new bot instance'
+	"""
+	Creates a new bot instance
+	"""
 	
 	# Bot name
 	name = "Mr. Nobody"
@@ -86,11 +86,12 @@ class Bot:
 		logger.info( "Initializing Skills" )
 
 		for skill in skills:
-			try:
-				level = skill['level'] if 'level' in skill else 0
-				name = skill['skill']
-				is_custom = skill['custom'] if 'custom' in skill else False
 
+			level = skill['level'] if 'level' in skill else 0
+			name = skill['skill']
+			is_custom = skill['custom'] if 'custom' in skill else False
+
+			try:
 				if is_custom:
 					module = importlib.import_module('config.skills.' + name.lower())
 				else:

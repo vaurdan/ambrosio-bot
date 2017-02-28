@@ -1,5 +1,4 @@
 from mongoengine import connect
-from slugify import slugify
 from config import config
 
 db = connect(

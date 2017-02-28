@@ -14,7 +14,7 @@ class Skill:
 		self.bot = bot
 		self.io_manager = bot.io_manager
 		self.io = self.io_manager.get_io_by_skill(self.name)
-		self.args = {}
+		self.args = args
 		self.rules = {}
 		#self.outputs = bot.get_outputs_by_skill(self.name)
 		

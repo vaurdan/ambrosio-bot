@@ -3,8 +3,10 @@ from skills import Skill
 
 class HelloWorld(Skill):
 
+	ignore_prefix = True
+
 	def setup_rules(self):
-		self.add_rule("^(olá|ola) Ambrósio(!|\.+)*$", self.say_hello)
+		self.add_rule("(olá|ola) Ambrósio(!|\.+)*$", self.say_hello)
 
 	def say_hello(self, message):
 		self.send_message( "Olá %s!" % str(message.user().name), message )

@@ -3,6 +3,9 @@
 import time
 import importlib
 import logging
+import re
+from unidecode import unidecode
+
 from collections import defaultdict
 
 from iomanager import IOManager
@@ -33,6 +36,8 @@ class Bot:
 
 	def __init__(self, name):
 		self.name = name
+
+		self.prefix = '^(' + re.escape(name) + "|" + re.escape(unidecode(name)) + "),? ?"
 
 		logger.info( "%s is initializing. Running version %s" % (name, self.version) )
 

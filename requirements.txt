@@ -2,3 +2,5 @@ pyyaml
 python-telegram-bot
 mongoengine
 python-slugify
+apscheduler
+unidecode

@@ -64,9 +64,16 @@ class Telegram(InputFetcher):
 						'name': update.message.from_user.first_name + " " + update.message.from_user.last_name,
 						'id': update.message.from_user.id, # TODO: Pode haver conflito de ID's?
 					})
+
+					# Check if it is a direct message or a channel message
+					chat_id = update.message.chat_id
+					if chat_id > 0:
+						message.set_as_direct()
+
 					# Add it to the queue
 					logger.debug("Received Message on Telegram: %s" % update.message.text)
 					self.add_input_message(message)
+
 				self.last_update_id = updates[-1].update_id + 1
 
 			cur_interval = self.poll_interval

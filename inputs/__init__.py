@@ -105,8 +105,16 @@ class InputMessage:
 		self.input = input
 		self.set_content(content)
 
+		self._is_direct = False
+
 	def user( self ):
 		return self._user
+
+	def set_as_direct(self):
+		self._is_direct = True
+
+	def is_direct(self):
+		return self._is_direct
 
 	def set_user_data( self, data ):
 		if 'username' not in data:

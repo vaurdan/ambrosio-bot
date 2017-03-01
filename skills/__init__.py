@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import logging
 import re
 
@@ -8,6 +9,8 @@ logger = logging.getLogger(__name__)
 class Skill:
 
 	ignore_case = True
+
+	ignore_prefix = False
 
 	def __init__(self, bot, args={}):
 		self.name = self.__class__.__name__
@@ -41,19 +44,17 @@ class Skill:
 
 		return re.compile( regex, flag)
 
-	def test(self, string):
-		'Returns true if the regex matches'
-		for rule, callback in self.rules.iteritems():
-			regex = self.compile_regex( rule )
-			if regex.match(string) is not None:
-				return True
-		return False
-
 	def run(self, message):
 		'Runs the algoritmh for a given string'
 		content_string = message.get_content()
 		for rule, callback in self.rules.iteritems():
+
+			# Append the prefix if it's set
+			if not message.is_direct() and not self.ignore_prefix:
+				rule = self.bot.prefix.encode('utf-8') + rule
+
 			regex = self.compile_regex( rule )
+
 			if regex.match(content_string) is not None:
 				callback(message)
 				return True

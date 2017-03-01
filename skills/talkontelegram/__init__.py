@@ -3,6 +3,8 @@ from skills import Skill
 
 class TalkOnTelegram(Skill):
 
+	ignore_prefix = True
+
 	def setup_rules(self):
 		self.add_rule("^\/talk (.*)", self.talk)
 

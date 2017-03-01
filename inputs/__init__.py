@@ -206,7 +206,7 @@ class InputProcesserWorker(threading.Thread):
 					if should_run and skill.run(message):
 						logger.debug( "Found a match on %s" % skill.name )
 						
-		except Exception as e:
+		except UnboundLocalError as e:
 			logger.exception( "Error in the %s message processing: %s" % ( message.get_input_id(), e.args[0]) )
 
 

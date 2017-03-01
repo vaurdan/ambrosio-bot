@@ -4,3 +4,4 @@ mongoengine
 python-slugify
 apscheduler
 unidecode
+tabulate

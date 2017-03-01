@@ -11,6 +11,8 @@ class User(Document):
 	input = StringField(required=True)
 	created_at = DateTimeField(default=datetime.datetime.now)
 
+	is_admin = BooleanField(default=False)
+
 	user_data = DictField()
 
 	meta = {'allow_inheritance': True}

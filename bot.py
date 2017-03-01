@@ -10,11 +10,7 @@ from collections import defaultdict
 
 from iomanager import IOManager
 
-# Models
-from models.user import User
-
 logger = logging.getLogger(__name__)
-
 
 class Bot:
 	"""
@@ -37,7 +33,7 @@ class Bot:
 	def __init__(self, name):
 		self.name = name
 
-		self.prefix = '^(' + re.escape(name) + "|" + re.escape(unidecode(name)) + "),? ?"
+		self.regex_name = '^(' + re.escape(name) + "|" + re.escape(unidecode(name)) + "),? ?"
 
 		logger.info( "%s is initializing. Running version %s" % (name, self.version) )
 

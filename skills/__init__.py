@@ -3,6 +3,7 @@ import logging
 import re
 
 from outputs import TextMessage, ImageMessage
+from config import config
 
 logger = logging.getLogger(__name__)
 
@@ -45,9 +46,21 @@ class Skill:
 		return re.compile( regex, flag)
 
 	def run(self, message):
-		'Runs the algoritmh for a given string'
+		"""
+		Runs the algorithm for a given string
+
+		:param message:
+		:return:
+		"""
 		content_string = message.get_content()
+
+		if config['ignore_utf8'] == 'yes' or config['ignore_utf8'] == True:
+			content_string = content_string # todo: unidecode this
+
 		for rule, callback in self.rules.iteritems():
+
+			if config['ignore_utf8'] == 'yes' or config['ignore_utf8'] == True:
+				rule = rule # todo: unidecode this
 
 			# Append the prefix if it's set
 			if not message.is_direct() and not self.ignore_prefix:
@@ -82,10 +95,17 @@ class Skill:
 		message = TextMessage( text_message, original_message, **args )
 		self.add_output(message)
 	
-	'''
-	Alias of Skill.send_message
-	'''
+
 	def send_text(self, text_message, original_message, reply=True,  args = {}):
+		"""
+		Alias of Skill.send_message
+
+		:param text_message:
+		:param original_message:
+		:param reply:
+		:param args:
+		:return:
+		"""
 		self.send_message(text_message, original_message, reply, **args)
 
 	def send_image(self, image_message, original_message, reply=True,  args = {}):

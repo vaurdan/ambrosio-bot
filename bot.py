@@ -4,11 +4,13 @@ import time
 import importlib
 import logging
 import re
+import traceback
 from unidecode import unidecode
 
 from collections import defaultdict
 
 from iomanager import IOManager
+from skills.default import Default
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +47,9 @@ class Bot:
 
 		# 2nd. Setup Skills
 		self.setup_skills()
+
+		# 3rd. Setup default skill
+		self.default_skill = Default(self)
 
 	def start(self):
 
@@ -103,6 +108,9 @@ class Bot:
 				self.register_skill( module_obj(self), level )
 			except ImportError as e:
 				logger.error( "Impossible to load skill %s: Module not found (%s)" % (name, e.args[0] ) )
+			except Exception:
+				logger.error( "Error loading skill. " + str( traceback.format_exc() ) )
+
 
 	def register_skill( self, skill, level = 0 ):
 		logger.debug( "Registering Skill %s in level %s" % ( skill.name, level ) )

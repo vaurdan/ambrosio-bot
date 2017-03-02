@@ -82,10 +82,11 @@ class OutputMessage:
 
 	is_reply = True
 
-	def __init__(self, content, input_message, reply=True):
+	def __init__(self, content, input_message, reply=True, is_default=False):
 		self.content = content
 		self.input_message = input_message
 		self.is_reply = reply
+		self.is_default = is_default
 
 	def get_input_id(self):
 		return self.input_message.get_input_id()

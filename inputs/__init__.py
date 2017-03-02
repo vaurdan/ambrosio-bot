@@ -104,8 +104,10 @@ class InputMessage:
 	def __init__(self, input, content=""):
 		self.input = input
 		self.set_content(content)
+		self.did_ran = False
 
 		self._is_direct = False
+		self._user = None
 
 	def user( self ):
 		return self._user
@@ -204,9 +206,15 @@ class InputProcesserWorker(threading.Thread):
 
 					# Try to run the message
 					if should_run and skill.run(message):
+						message.did_ran = True
 						logger.debug( "Found a match on %s" % skill.name )
-						
-		except UnboundLocalError as e:
+						return
+
+			# If I'm here, just send the default message
+			if not message.did_ran:
+				self.io_manager.bot.default_skill.run(message)
+
+		except Exception as e:
 			logger.exception( "Error in the %s message processing: %s" % ( message.get_input_id(), e.args[0]) )
 
 

@@ -4,8 +4,6 @@ from tabulate import tabulate
 
 class AdminCommands(Skill):
 
-	ignore_prefix = True
-
 	def setup_rules(self):
 		self.register_command("talk", self.talk)
 		self.register_command("users", self.users)
@@ -55,4 +53,4 @@ class AdminCommands(Skill):
 		print "User " + str( user.username ) + " is now Administrator"
 
 	def register_command(self, name, callback):
-		self.add_rule( '^\/' + name, callback )
+		self.add_rule( '^\/' + name, callback, ignore_prefix=True )

@@ -11,14 +11,12 @@ class Skill:
 
 	ignore_case = True
 
-	ignore_prefix = False
-
-	def __init__(self, bot, args={}):
+	def __init__(self, bot):
 		self.name = self.__class__.__name__
 		self.bot = bot
 		self.io_manager = bot.io_manager
 		self.io = self.io_manager.get_io_by_skill(self.name)
-		self.args = args
+		self.args = self.setup_args()
 		self.rules = {}
 		#self.outputs = bot.get_outputs_by_skill(self.name)
 		
@@ -29,10 +27,29 @@ class Skill:
 		logger.warning("%s has no rules. Please implement the setup_rules method." % self.name)
 		return False
 
-	def add_rule( self, regex, callback ):
+	def add_rule( self, regex, callback, privileged = False, ignore_prefix = False ):
+		args = {
+			'privileged': privileged,
+			'ignore_prefix': ignore_prefix,
+		}
 		logger.info("[ %s ] Registering rule %s" % (self.name, regex) )
-		self.rules[ regex ] = callback
+		self.rules[ regex ] = ( callback, args )
 		return True
+
+	def setup_args(self):
+
+		skills = config['skills']
+		for skill in skills:
+			if skill['skill'].lower() == self.name.lower():
+				return skill['args'] if 'args' in skill else None
+
+	def get_arg(self, key, default=None):
+		try:
+			return self.args[key]
+		except Exception:
+			if default is not None:
+				return default
+			raise Exception("Missing mandatory '%s' in %s config." % (key,self.__class__.__name__))
 
 	def compile_regex(self, regex):
 		flag = 0
@@ -57,25 +74,50 @@ class Skill:
 		if config['ignore_utf8'] == 'yes' or config['ignore_utf8'] == True:
 			content_string = content_string # todo: unidecode this
 
-		for rule, callback in self.rules.iteritems():
-
+		for rule, rule_config in self.rules.iteritems():
+			callback, rule_args = rule_config
 			if config['ignore_utf8'] == 'yes' or config['ignore_utf8'] == True:
 				rule = rule # todo: unidecode this
 
 			# Append the prefix if it's set
-			if not message.is_direct() and not self.ignore_prefix:
-				rule = self.bot.prefix.encode('utf-8') + rule
+			if not message.is_direct() and not rule_args['ignore_prefix']:
+				rule = self.bot.regex_name.encode('utf-8') + rule
+			else:
+				rule = "(" + str(self.bot.regex_name.encode('utf-8')) + ")?" + rule
 
 			regex = self.compile_regex( rule )
 
 			if regex.match(content_string) is not None:
-				callback(message)
+				self._run_callback( callback, rule_args, message )
+				message.did_run = True
 				return True
+		return False
+
+	def _run_callback(self, callback, args, message):
+		# Make sure user has permissions to run the skill
+		if args['privileged'] and not self.check_permission(message):
+			return
+
+		callback(message)
+
+	def check_permission(self, message, output=True):
+		# todo: maybe move this to Skill?
+		if message.user().is_privileged():
+			return True
+
+		if output:
+			self.send_message( "Lamento senhor. Não tenho permissão para o ajudar...", message )
+
 		return False
 
 	def add_output(self, output_message):
 		# Store the output in the correct queue
 		try:
+			# If it's default, simply add the output to the symmetrical output
+			if output_message.is_default:
+				self.io_manager.add_output( output_message.get_input_id(), output_message)
+				return
+
 			# O add output tem que ser para todos os outputs
 			for io in self.io:
 				# If is a list, loop thru the list of outputs

@@ -17,6 +17,9 @@ class User(Document):
 
 	meta = {'allow_inheritance': True}
 
+	def is_privileged(self):
+		return self.is_admin
+
 
 def find_by_id( id ):
 	return User.objects(id=id).first()

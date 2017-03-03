@@ -88,6 +88,7 @@ class Skill:
 			regex = self.compile_regex( rule )
 
 			if regex.match(content_string) is not None:
+				message.regex = regex
 				self._run_callback( callback, rule_args, message )
 				message.did_run = True
 				return True

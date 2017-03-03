@@ -106,6 +106,8 @@ class InputMessage:
 		self.set_content(content)
 		self.did_ran = False
 
+		self.bot = self.input.io_manager.bot
+
 		self._is_direct = False
 		self._user = None
 

@@ -28,18 +28,18 @@ class HomeAssistant(Skill):
 			raise Exception("HomeAssistant cannot connect to %s... Please check your config file." % self.api_url)
 
 	def setup_rules(self):
-		self.add_rule("lig(a|ue)r? (?P<article>a|as|o|os)", self.turn_entity, privileged=True )
-		self.add_rule("deslig(a|ue)r? (?P<article>a|as|o|os)", self.turn_entity, privileged=True )
+		self.add_rule("lig(a|ue)r? (?P<article>a|as|o|os)?", self.turn_entity, privileged=True )
+		self.add_rule("deslig(a|ue)r? (?P<article>a|as|o|os)?", self.turn_entity, privileged=True )
 
-		self.add_rule("(?P<article>a|as|o|os) +(?P<prefixed_name>(.*(luz(es)?|iluminação).* (da|na|do|no) ?)?(?P<entity>(\w|\s)*)) *(?P<is_word>est(á|a)|est(ã|a)o) (des)?ligad(o|a|os|as)\?*", self.check_status, privileged=True)
+		self.add_rule("(?P<article>a|as|o|os) +(?P<prefixed_name>(.*(luz(es)?|iluminação).* (da|na|do|no)? ?)?(?P<entity>(\w|\s)*)) *(?P<is_word>est(á|a)|est(ã|a)o) (des)?ligad(o|a|os|as)\?*", self.check_status, privileged=True)
 
 		self.add_rule("deixei *(?P<article>a|as|o|os) +(?P<prefixed_name>(.*(luz(es)?|iluminação).* (da|na|do|no) ?)?(?P<entity>(\w|\s)*)) *(des)?ligad(o|a|os|as)\?*", self.did_i_forgot, privileged=True)
-		self.add_rule("esqueci(-me)? +de (des)?ligar (?P<article>a|as|o|os) (?P<prefixed_name>(.*(luz(es)?|iluminação).* (da|na|do|no) ?)?(?P<entity>(\w|\s)*))\?*", self.did_i_forgot, privileged=True)
+		self.add_rule("(esqueci(-me)? +de )?((des)?ligar|desliguei) (?P<article>a|as|o|os) (?P<prefixed_name>(.*(luz(es)?|iluminação).* (da|na|do|no) ?)?(?P<entity>(\w|\s)*))\?*", self.did_i_forgot, privileged=True)
 
 	def turn_entity(self, message):
 
 		# Test if it's a light
-		light_regex = message.regex.pattern + " ?(?P<prefixed_name>(.*(luz(es)?|iluminação).* (da|na|do|no) ?)?(?P<entity>(\w|\s)*))"
+		light_regex = message.regex.pattern + " ?(?P<prefixed_name>(.*(luz(es)?|iluminação).* (da|na|do|no)? ?)?(?P<entity>(\w|\s)*))"
 		regex = re.search( re.compile(light_regex, re.IGNORECASE), message.get_content() )
 
 		entity_name = regex.group("entity")
@@ -76,10 +76,12 @@ class HomeAssistant(Skill):
 		regex = re.search( re.compile( message.regex.pattern, re.IGNORECASE ), message.get_content())
 
 		entity_name = regex.group("entity")
-		print entity_name
-		entity = self.remoteapi.get_entity(entity_name)
-
-		print entity
+		try:
+			entity = self.remoteapi.get_entity(entity_name)
+		except TooManyEntities as e:
+			self.send_message("Existem várias entidades com esse nome. Poderá ser um pouco mais específico?", message)
+			logger.error("Found multiple entities: %s" % e.entities)
+			return
 
 		article = regex.group("article")
 		prefixed_name = regex.group("prefixed_name")
@@ -112,6 +114,33 @@ class HomeAssistant(Skill):
 
 
 	def did_i_forgot(self,message):
-		self.send_message("did i forgot", message)
+		regex = re.search( re.compile( message.regex.pattern, re.IGNORECASE ), message.get_content())
+
+		entity_name = regex.group("entity")
+		try:
+			entity = self.remoteapi.get_entity(entity_name)
+		except TooManyEntities as e:
+			self.send_message("Existem várias entidades com esse nome. Poderá ser um pouco mais específico?", message)
+			logger.error("Found multiple entities: %s" % e.entities)
+			return
+
+		if entity['state'] == "on":
+			sentences = [
+				"Sim, senhor. Está %(turned_on_word)s.",
+				"Está %(turned_on_word)s.",
+			]
+			turned_on_word = "ligad" + str(regex.group('article')).lower()
+			self.send_message( utils.upperfirst( random.choice( sentences ) % { 'turned_on_word': turned_on_word }), message)
+
+		elif entity['state'] == "off":
+			sentences = [
+				"Não se preocupe, que está %(turned_on_word)s..",
+				"Não, senhor.",
+				"Está %(turned_on_word)s."
+			]
+			turned_on_word = "desligad" + str(regex.group('article')).lower()
+
+			self.send_message( utils.upperfirst( random.choice( sentences ) % { 'turned_on_word': turned_on_word }), message)
+
 
 

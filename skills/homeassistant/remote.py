@@ -1,6 +1,10 @@
 from requests import ConnectionError
 from requests import get, post
+import logging
 import json
+
+logger = logging.getLogger(__name__)
+
 
 class TooManyEntities(Exception):
 	def __init__(self, entities):
@@ -46,7 +50,7 @@ class RemoteHA:
 
 		return entity['entity_id']
 
-	def get_entity(self,name):
+	def get_entity(self,name, ignore_automations=True):
 		name = name.strip()
 		states = self.get_all_states()
 
@@ -54,6 +58,9 @@ class RemoteHA:
 		curr_state = None
 		found_states = []
 		for state in states:
+			if ignore_automations and 'automation.' in state['entity_id']:
+				continue
+
 			if state['attributes']['friendly_name'].lower() == name.lower():
 				return state
 			if name.lower() in state['attributes']['friendly_name'].lower():
@@ -62,7 +69,7 @@ class RemoteHA:
 				found_states.append(curr_state)
 
 		if num_ocurrences == 0:
-			print "zero ocurrences"
+			logger.info("No entity named '%s' was found." % name)
 			return None
 
 		if num_ocurrences > 1:
@@ -78,7 +85,7 @@ class RemoteHA:
 			'entity_id': entity_id,
 		}
 
-		print entity_id
+		logger.info( "Turning entity '%s' %s." % ( entity_id, state ) )
 		# If it's a light
 		if 'light.' in entity_id:
 			return self.request( "services/light/turn_%s" % state.lower(), method="POST", data=data)

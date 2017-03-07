@@ -102,7 +102,6 @@ class Skill:
 		callback(message)
 
 	def check_permission(self, message, output=True):
-		# todo: maybe move this to Skill?
 		if message.user().is_privileged():
 			return True
 

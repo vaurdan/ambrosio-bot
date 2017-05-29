@@ -3,6 +3,7 @@
 from outputs import OutputDispatcher
 from telegram import Bot
 import logging
+import mimetypes
 
 logger = logging.getLogger(__name__)
 
@@ -39,14 +40,29 @@ class Telegram(OutputDispatcher):
 		# Get the caption
 		caption = message.get_caption() if message.has_caption() else False
 
+		image = message.get_content()
+
+		## TODO: Validate if path exists, otherwise will crash
+		mime_type = mimetypes.MimeTypes().guess_type(image.name)[0]
+
 		# Check if the message came from telegram
+		## TODO: Refactor this if, please!!!
 		if hasattr(message.input_message, 'update'):
 			telegram_message = message.input_message.message
 
 			if message.is_reply:
-				telegram_message.reply_photo( message.get_content(), caption=caption )
+				if mime_type == 'image/gif':
+					telegram_message.reply_document( document=image, caption=caption)
+				else:
+					telegram_message.reply_photo( image, caption=caption )
 			else:
 				chat_id = telegram_message.chat.id
-				self.telegram_bot.send_photo( chat_id=chat_id, photo=message.get_content(), caption=caption )
+				if mime_type == 'image/gif':
+					self.telegram_bot.send_document( chat_id=chat_id, document=image, caption=caption)
+				else:
+					self.telegram_bot.send_photo( chat_id=chat_id, photo=image, caption=caption )
 		else:
-			self.telegram_bot.send_photo( chat_id=self.default_chat, photo=message.get_content(), caption=caption )
+			if mime_type == 'image/gif':
+				self.telegram_bot.send_document( chat_id=self.default_chat, document=image, caption=caption)
+			else:
+				self.telegram_bot.send_photo( chat_id=self.default_chat, photo=image, caption=caption )
